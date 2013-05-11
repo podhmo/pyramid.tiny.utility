@@ -2,12 +2,12 @@ from pyramid import testing
 import pytest
 
 _config = None
-def setup_module():
+def setup_function(fn):
     global _config
     _config = testing.setUp()
     _config.include("pyramid_tiny_utility")
 
-def teardown_module():
+def teardown_function(fn):
     global _config
     _config = None
     testing.tearDown()
@@ -64,11 +64,11 @@ def test_multi_lookup_by_name():
     assert u0 == lookup(request)
     assert u1 == lookup(request, name="another")
 
-def test_register_utility_validation():
+def test_register_utility_after_set_validation():
     from pyramid_tiny_utility.components import ConfiguredObject
     from pyramid.exceptions import ConfigurationError
 
-    class VU(ConfiguredObject):
+    class HasValidation(ConfiguredObject):
         def __init__(self, depends=None):
             self.depends = depends
 
@@ -77,14 +77,29 @@ def test_register_utility_validation():
     def assert_depends(o):
         if not o.depends:
             raise ConfigurationError("")
+    _config.add_validation(HasValidation, assert_depends)
 
     settings = {"depends": True}
-    _config.add_instance_from_settings(VU, settings)
-    _config.add_validation(VU, assert_depends)
+    _config.add_instance_from_settings(HasValidation, settings)
 
     settings = {"depends": False}
     with pytest.raises(ConfigurationError):
-        _config.add_instance_from_settings(VU, settings)
+        _config.add_instance_from_settings(HasValidation, settings)
+
+def test_register_utility_before_set_validation():
+    from pyramid_tiny_utility.components import ConfiguredObject
+    from pyramid.exceptions import ConfigurationError
+
+    class HasValidation(ConfiguredObject):
+        pass
+
+    def always_error(o):
+        raise ConfigurationError("")
+
+    _config.add_validation(HasValidation, always_error)
+
+    with pytest.raises(ConfigurationError):
+        _config.add_instance(HasValidation())
 
 ## mapping
 def test_mapping():

@@ -28,17 +28,19 @@ testing.tearDown()
 
 ```
 ### Valiadative Utility
-from pyramid_tiny_utility import ValidativeObject
+from pyramid import testing 
+from pyramid_tiny_utility import create_configured_instance_lookup
+from pyramid_tiny_utility import ConfiguredObject
 from pyramid.exceptions import ConfigurationError
 
-class MailManagement(ValidativeObject):
+class MailManagement(ConfiguredObject):
     def __init__(self, sender=None, default_title=None):
         self.sender = sender
         self.default_title = default_title
 
-    def validate(self):
-        if not "@" in self.sender:
-            raise ConfigurationError("Invalid sender")
+def validate_sender(o):
+    if not "@" in o.sender:
+        raise ConfigurationError("Invalid sender")
 
 settings = {"mail.sender": "invalid-name",
             "mail.default_title": "default"}
@@ -52,13 +54,16 @@ config = testing.setUp()
 config.include("pyramid_tiny_utility")
 try:
     config.add_instance(MailManagement(settings["mail.sender"],
-                                                settings["mail.default_title"]))
+                                       settings["mail.default_title"]))
+    config.add_validation(MailManagement, validate_sender)
 except ConfigurationError:
     print "error found"
 
+
 settings["mail.sender"] = "foo@bar.jp"
 config.add_instance(MailManagement(settings["mail.sender"],
-                                            settings["mail.default_title"]))
+                                   settings["mail.default_title"]))
+
 
 ## request
 

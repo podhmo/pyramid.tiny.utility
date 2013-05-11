@@ -16,14 +16,13 @@ def as_interfaces(src):
                   for c in maybe_iter(src)])
 
 ## directive
-
 def add_instance(config, provided, name=""):
     interface = get_interface(provided)
     if interface is None:
         raise ConfigurationError("{0} is not {1!r}".format(provided, ConfiguredObject)
 ) 
     def register():
-        validations = config.registry.adapters.lookup((interface,), IList, name=VALIDATION_KEY)
+        validations = config.registry.adapters.lookup((interface,), IList, name=VALIDATION_KEY+name)
         if validations:
             for v in validations:
                 v(provided)
@@ -43,13 +42,18 @@ def add_mapping(config, src, dst, value=None, name=""):
     config.action("tinyAdapter", register)
 
 VALIDATION_KEY = "_validation"
-def add_validation(config, tiny_utility_cls, validation):
+def add_validation(config, tiny_utility_cls, validation, name=""):
     iface = get_interface(tiny_utility_cls)
-    vlds = config.registry.adapters.lookup((iface,), IList, name=VALIDATION_KEY, default=None)
-    if vlds is None:
-        vlds = []
-        config.registry.adapters.register((iface,), IList, name=VALIDATION_KEY, value=vlds)
-    vlds.append(validation)
+    list_of_validation = config.registry.adapters.lookup((iface,), IList, name=VALIDATION_KEY+name, default=None)
+    if list_of_validation is None:
+        list_of_validation = []
+        config.registry.adapters.register((iface,), IList, name=VALIDATION_KEY+name, value=list_of_validation)
+    list_of_validation.append(validation)
+
+    u = config.registry.queryUtility(iface, name=name)
+    if u:
+        validation(u)
+
 ## create
 
 def create_configured_instance_lookup(tiny_utility_cls, name=None):
