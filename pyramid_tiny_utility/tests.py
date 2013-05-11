@@ -72,17 +72,17 @@ def test_register_utility_after_set_validation():
         def __init__(self, depends=None):
             self.depends = depends
 
-        from_settings = ConfiguredObject.create_from_settings_from_paramters(["depends"])
+        from_settings = ConfiguredObject.create_from_settings_from_paramters(["depends"], prefix="test.")
 
     def assert_depends(o):
         if not o.depends:
             raise ConfigurationError("")
     _config.add_validation(HasValidation, assert_depends)
 
-    settings = {"depends": True}
+    settings = {"test.depends": True}
     _config.add_instance_from_settings(HasValidation, settings)
 
-    settings = {"depends": False}
+    settings = {"test.depends": False}
     with pytest.raises(ConfigurationError):
         _config.add_instance_from_settings(HasValidation, settings)
 

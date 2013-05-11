@@ -14,7 +14,7 @@ testing_requires = [
 ]
 
 setup(name='pyramid-tiny-utility',
-      version='0.0',
+      version='0.0.1',
       description='the training wheel for developing with pyramid',
       long_description=README + '\n\n' +  CHANGES,
       author='',

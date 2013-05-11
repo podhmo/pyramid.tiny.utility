@@ -32,10 +32,10 @@ class ConfiguredObject(object):
         return cls()
 
     @classmethod
-    def create_from_settings_from_paramters(cls, ks):
+    def create_from_settings_from_paramters(cls, ks, prefix=""):
         @classmethod
         def from_settings(cls, settings):
-            params = {k:settings.get(k) for k in ks}
+            params = {k:settings.get(prefix+k) for k in ks}
             return cls(**params)
         return from_settings
 
