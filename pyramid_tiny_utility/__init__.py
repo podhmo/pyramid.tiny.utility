@@ -24,7 +24,9 @@ def register_tiny_utility(config, provided, name=""):
 ) 
     if hasattr(provided, "validate"):
         provided.validate()
-    config.registry.registerUtility(provided, interface, name=name)
+    def register():
+        config.registry.registerUtility(provided, interface, name=name)
+    config.action("tinyUtility", register)
 
 def register_tiny_utility_from_settings(config, cls, settings, name=""):
     provided = cls.from_settings(settings)
@@ -34,7 +36,9 @@ def register_mapping(config, src, dst, value=None, name=""):
     isrc = as_interfaces(src)
     idst = create_dynamic_interface(dst.__name__)
     value = value or dst
-    config.registry.adapters.register(isrc, idst, name=name, value=value)
+    def register():
+        config.registry.adapters.register(isrc, idst, name=name, value=value)
+    config.action("tinyAdapter", register)
 
 ## create
 
