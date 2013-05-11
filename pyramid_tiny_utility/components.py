@@ -1,4 +1,5 @@
 from zope.interface import Interface
+from zope.interface import implementer
 from pyramid.exceptions import ConfigurationError
 from functools import partial
 
@@ -20,8 +21,8 @@ create_dynamic_interface = partial(_create_dynamic_interface, cache=_cache)
 class ConfiguredObjectMeta(type):
     def __new__(cls, name, base, attrs):
         check_reserved_word(attrs, "_interface")
-        attrs["_interface"] = provided = create_dynamic_interface("I"+name)
-        return type(name, base, attrs)
+        attrs["_interface"] = iface = create_dynamic_interface("I"+name)
+        return implementer(iface)(type(name, base, attrs))
 
 class ConfiguredObject(object):
     __metaclass__ = ConfiguredObjectMeta
@@ -37,10 +38,6 @@ class ConfiguredObject(object):
             params = {k:settings.get(k) for k in ks}
             return cls(**params)
         return from_settings
-
-class ValidativeObject(ConfiguredObject):
-    def validate(self):
-        raise NotImplementedError
 
 def classname(cls):
     if hasattr(cls, "__classname__"):

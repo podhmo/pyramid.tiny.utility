@@ -64,21 +64,26 @@ def test_multi_lookup_by_name():
     assert u0 == lookup(request)
     assert u1 == lookup(request, name="another")
 
-def test_register_utility_from_settigs():
-    from pyramid_tiny_utility.components import ValidativeObject
-    class VU(ValidativeObject):
+def test_register_utility_validation():
+    from pyramid_tiny_utility.components import ConfiguredObject
+    from pyramid.exceptions import ConfigurationError
+
+    class VU(ConfiguredObject):
         def __init__(self, depends=None):
             self.depends = depends
 
-        def validate(self):
-            assert self.depends
-        from_settings = ValidativeObject.create_from_settings_from_paramters(["depends"])
+        from_settings = ConfiguredObject.create_from_settings_from_paramters(["depends"])
+
+    def assert_depends(o):
+        if not o.depends:
+            raise ConfigurationError("")
 
     settings = {"depends": True}
     _config.add_instance_from_settings(VU, settings)
+    _config.add_validation(VU, assert_depends)
 
     settings = {"depends": False}
-    with pytest.raises(AssertionError):
+    with pytest.raises(ConfigurationError):
         _config.add_instance_from_settings(VU, settings)
 
 ## mapping

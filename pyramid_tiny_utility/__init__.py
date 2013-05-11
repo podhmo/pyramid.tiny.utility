@@ -3,8 +3,8 @@ from .components import (
     get_interface,
     create_dynamic_interface,
     ConfiguredObject,
-    ValidativeObject
 )
+from .interfaces import IList
 
 def maybe_iter(o):
     if hasattr(o, "__iter__"):
@@ -20,11 +20,13 @@ def as_interfaces(src):
 def add_instance(config, provided, name=""):
     interface = get_interface(provided)
     if interface is None:
-        raise ConfigurationError("{0} is not have _interface".format(provided)
+        raise ConfigurationError("{0} is not {1!r}".format(provided, ConfiguredObject)
 ) 
-    if hasattr(provided, "validate"):
-        provided.validate()
     def register():
+        validations = config.registry.adapters.lookup((interface,), IList, name=VALIDATION_KEY)
+        if validations:
+            for v in validations:
+                v(provided)
         config.registry.registerUtility(provided, interface, name=name)
     config.action("tinyUtility", register)
 
@@ -40,6 +42,14 @@ def add_mapping(config, src, dst, value=None, name=""):
         config.registry.adapters.register(isrc, idst, name=name, value=value)
     config.action("tinyAdapter", register)
 
+VALIDATION_KEY = "_validation"
+def add_validation(config, tiny_utility_cls, validation):
+    iface = get_interface(tiny_utility_cls)
+    vlds = config.registry.adapters.lookup((iface,), IList, name=VALIDATION_KEY, default=None)
+    if vlds is None:
+        vlds = []
+        config.registry.adapters.register((iface,), IList, name=VALIDATION_KEY, value=vlds)
+    vlds.append(validation)
 ## create
 
 def create_configured_instance_lookup(tiny_utility_cls, name=None):
@@ -62,5 +72,6 @@ def get_mapping(request, src, dst, name=""):
 
 def includeme(config):
     config.add_directive("add_instance", add_instance)
+    config.add_directive("add_validation", add_validation)
     config.add_directive("add_instance_from_settings", add_instance_from_settings)
     config.add_directive("add_mapping", add_mapping)
