@@ -20,13 +20,14 @@ def as_interfaces(src):
 def register_tiny_utility(config, provided, name=""):
     interface = get_interface(provided)
     if interface is None:
-        raise ConfigurationError("{0} is not have _interface".format(provided))
+        raise ConfigurationError("{0} is not have _interface".format(provided)
+) 
+    if hasattr(provided, "validate"):
+        provided.validate()
     config.registry.registerUtility(provided, interface, name=name)
 
 def register_tiny_utility_from_settings(config, cls, settings, name=""):
     provided = cls.from_settings(settings)
-    if hasattr(provided, "validate"):
-        provided.validate()
     register_tiny_utility(config, provided, name=name)
 
 def register_mapping(config, src, dst, value=None, name=""):
@@ -45,12 +46,15 @@ def create_lookup(tiny_utility_cls, name=None):
         _lookup.__name__ = name
     return _lookup
 
-def get_mapping(request, src, dst, name=""):
+def get_mapping_from_class(request, src, dst, name=""):
     isrc = as_interfaces(src)
     idst = create_dynamic_interface(dst.__name__)
     def mapping(*args):
         return request.registry.adapters.lookup(isrc, idst, name=name)(*args)
     return mapping
+
+def get_mapping(request, src, dst, name=""):
+    return get_mapping_from_class(request, src.__class__, dst, name=name)
 
 def includeme(config):
     config.add_directive("register_tiny_utility", register_tiny_utility)

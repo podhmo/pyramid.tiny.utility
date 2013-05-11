@@ -83,7 +83,7 @@ def test_register_utility_from_settigs():
 
 ## mapping
 def test_mapping():
-    from pyramid_tiny_utility import get_mapping
+    from pyramid_tiny_utility import get_mapping_from_class
     # src -> container
     class Container(object):
         def __init__(self, src):
@@ -96,14 +96,14 @@ def test_mapping():
     
     class request:
         registry = _config.registry
-    mapping = get_mapping(request, Source, Container)
+    mapping = get_mapping_from_class(request, Source, Container)
 
     src = Source()
     mapped = mapping(src)
     assert isinstance(mapped, Container)
 
 def test_mapping_another():
-    from pyramid_tiny_utility import get_mapping
+    from pyramid_tiny_utility import get_mapping_from_class
     class A():
         pass
 
@@ -122,13 +122,12 @@ def test_mapping_another():
     class request:
         registry = _config.registry
 
-    mapping = get_mapping(request, A, Adapter)
+    mapping = get_mapping_from_class(request, A, Adapter)
     a = A()
     mapped = mapping(a)
     assert isinstance(mapped, BAdapter)
 
-    mapping = get_mapping(request, A, Adapter, name="c-case")
+    mapping = get_mapping_from_class(request, A, Adapter, name="c-case")
     a = A()
     mapped = mapping(a)
     assert isinstance(mapped, CAdapter)
-
