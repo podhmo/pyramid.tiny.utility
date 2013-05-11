@@ -39,25 +39,25 @@ def test_register_utility():
     assert u == _config.registry.queryUtility(interface)
     
 def test_lookup_factory():
-    from pyramid_tiny_utility import create_lookup_function
+    from pyramid_tiny_utility import create_lookup
     u = _create_utility()()
     _config.register_tiny_utility(u)
 
-    lookup = create_lookup_function(u)
+    lookup = create_lookup(u)
     class request:
         registry = _config.registry
 
     assert u == lookup(request)
 
 def test_multi_lookup_by_name():
-    from pyramid_tiny_utility import create_lookup_function
+    from pyramid_tiny_utility import create_lookup
     u0 = _create_utility()()
     u1 = _create_utility()()
 
     _config.register_tiny_utility(u0)
     _config.register_tiny_utility(u1,name="another")
 
-    lookup = create_lookup_function(u0)
+    lookup = create_lookup(u0)
     class request:
         registry = _config.registry
 
@@ -80,3 +80,55 @@ def test_register_utility_from_settigs():
     settings = {"depends": False}
     with pytest.raises(AssertionError):
         _config.register_tiny_utility_from_settings(VU, settings)
+
+## mapping
+def test_mapping():
+    from pyramid_tiny_utility import get_mapping
+    # src -> container
+    class Container(object):
+        def __init__(self, src):
+            self.src = src
+
+    class Source(object):
+        pass
+
+    _config.register_mapping(Source, Container)
+    
+    class request:
+        registry = _config.registry
+    mapping = get_mapping(request, Source, Container)
+
+    src = Source()
+    mapped = mapping(src)
+    assert isinstance(mapped, Container)
+
+def test_mapping_another():
+    from pyramid_tiny_utility import get_mapping
+    class A():
+        pass
+
+    class Adapter(object):
+        def __init__(self, a):
+            self.a = a
+
+    class BAdapter(Adapter):
+        pass
+    class CAdapter(Adapter):
+        pass
+
+    _config.register_mapping(A, Adapter, BAdapter)
+    _config.register_mapping(A, Adapter, CAdapter, name="c-case")
+    
+    class request:
+        registry = _config.registry
+
+    mapping = get_mapping(request, A, Adapter)
+    a = A()
+    mapped = mapping(a)
+    assert isinstance(mapped, BAdapter)
+
+    mapping = get_mapping(request, A, Adapter, name="c-case")
+    a = A()
+    mapped = mapping(a)
+    assert isinstance(mapped, CAdapter)
+

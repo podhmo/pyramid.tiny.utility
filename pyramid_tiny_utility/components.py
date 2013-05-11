@@ -1,5 +1,6 @@
 from zope.interface import Interface
 from pyramid.exceptions import ConfigurationError
+from functools import partial
 
 def check_reserved_word(candidates, name, exclass=ConfigurationError):
     if name in candidates:
@@ -8,11 +9,14 @@ def check_reserved_word(candidates, name, exclass=ConfigurationError):
 def get_interface(tiny_utility_cls):
     return getattr(tiny_utility_cls,"_interface")
 
-def create_dynamic_interface(name=None):
-    return Interface.__class__(name=name)
+_cache = {}
+def _create_dynamic_interface(name=None, cache=None):
+    if not name in cache:
+        cache[name] = Interface.__class__(name=name)
+    return cache[name]
+create_dynamic_interface = partial(_create_dynamic_interface, cache=_cache)
 
 ## utility
-
 class TinyUtilityMeta(type):
     def __new__(cls, name, base, attrs):
         check_reserved_word(attrs, "_interface")
@@ -38,4 +42,7 @@ class ValidativeUtility(TinyUtility):
     def validate(self):
         raise NotImplementedError
 
-## adapters
+def classname(cls):
+    if hasattr(cls, "__classname__"):
+        return cls.__classname__
+    return cls.__name__
