@@ -85,7 +85,20 @@ def test_many_kinds_utility():
 
     assert a == lookupA(request)
     assert b == lookupB(request)
-    
+
+def test_inherit_object_as_same_interface():
+    from pyramid_tiny_utility import ConfiguredObject
+    from pyramid_tiny_utility import get_interface
+    class Base(ConfiguredObject):
+        pass
+    class XFlavor(Base):
+        pass
+    class YFlavor(Base):
+        pass
+    assert get_interface(ConfiguredObject) != get_interface(Base)
+    assert get_interface(Base) == get_interface(XFlavor)
+    assert get_interface(Base) == get_interface(YFlavor)
+
 
 def test_register_utility_after_set_validation():
     from pyramid_tiny_utility.components import ConfiguredObject
