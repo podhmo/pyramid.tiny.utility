@@ -64,6 +64,29 @@ def test_multi_lookup_by_name():
     assert u0 == lookup(request)
     assert u1 == lookup(request, name="another")
 
+def test_many_kinds_utility():
+    from pyramid_tiny_utility import ConfiguredObject
+    from pyramid_tiny_utility import create_configured_instance_lookup        
+    class A(ConfiguredObject):
+        pass
+    class B(ConfiguredObject):
+        pass
+
+    lookupA = create_configured_instance_lookup(A)
+    lookupB = create_configured_instance_lookup(B)
+
+    a = A()
+    b = B()
+    _config.add_instance(a)
+    _config.add_instance(b)
+    
+    class request:
+        registry = _config.registry
+
+    assert a == lookupA(request)
+    assert b == lookupB(request)
+    
+
 def test_register_utility_after_set_validation():
     from pyramid_tiny_utility.components import ConfiguredObject
     from pyramid.exceptions import ConfigurationError

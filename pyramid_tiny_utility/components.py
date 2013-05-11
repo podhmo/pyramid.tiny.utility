@@ -8,7 +8,7 @@ def check_reserved_word(candidates, name, exclass=ConfigurationError):
         raise exclass("{0} is reserved name".format(name))
 
 def get_interface(tiny_utility_cls):
-    return getattr(tiny_utility_cls,"_interface")
+    return getattr(tiny_utility_cls,"_interface", None)
 
 _cache = {}
 def _create_dynamic_interface(name=None, cache=None):
@@ -19,10 +19,15 @@ create_dynamic_interface = partial(_create_dynamic_interface, cache=_cache)
 
 ## utility
 class ConfiguredObjectMeta(type):
-    def __new__(cls, name, base, attrs):
-        check_reserved_word(attrs, "_interface")
-        attrs["_interface"] = iface = create_dynamic_interface("I"+name)
-        return implementer(iface)(type(name, base, attrs))
+    _root = None #xxx:
+    def __init__(cls, name, bases, attrs):
+        got = iface = get_interface(cls)
+        if iface == cls._root:
+            cls._interface = iface = create_dynamic_interface("I"+name)
+            implementer(iface)(cls)
+        if got is None:
+            cls._root = iface
+        return super(ConfiguredObjectMeta, cls).__init__(name, bases, attrs)
 
 class ConfiguredObject(object):
     __metaclass__ = ConfiguredObjectMeta
