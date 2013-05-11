@@ -13,14 +13,14 @@ def teardown_module():
     testing.tearDown()
 
 def _create_utility():
-    from pyramid_tiny_utility import TinyUtility
-    class U(TinyUtility):
+    from pyramid_tiny_utility import ConfiguredObject
+    class U(ConfiguredObject):
         pass
     return U
 
 ## test
 def test_add_directive():
-    assert _config.register_tiny_utility
+    assert _config.add_instance
 
 def test_tiny_utility_has_interface():
     from pyramid_tiny_utility import get_interface
@@ -33,31 +33,31 @@ def test_tiny_utility_has_interface():
 def test_register_utility():
     from pyramid_tiny_utility import get_interface
     u = _create_utility()()
-    _config.register_tiny_utility(u)
+    _config.add_instance(u)
 
     interface = get_interface(u)
     assert u == _config.registry.queryUtility(interface)
     
 def test_lookup_factory():
-    from pyramid_tiny_utility import create_lookup
+    from pyramid_tiny_utility import create_configured_instance_lookup
     u = _create_utility()()
-    _config.register_tiny_utility(u)
+    _config.add_instance(u)
 
-    lookup = create_lookup(u)
+    lookup = create_configured_instance_lookup(u)
     class request:
         registry = _config.registry
 
     assert u == lookup(request)
 
 def test_multi_lookup_by_name():
-    from pyramid_tiny_utility import create_lookup
+    from pyramid_tiny_utility import create_configured_instance_lookup
     u0 = _create_utility()()
     u1 = _create_utility()()
 
-    _config.register_tiny_utility(u0)
-    _config.register_tiny_utility(u1,name="another")
+    _config.add_instance(u0)
+    _config.add_instance(u1,name="another")
 
-    lookup = create_lookup(u0)
+    lookup = create_configured_instance_lookup(u0)
     class request:
         registry = _config.registry
 
@@ -65,21 +65,21 @@ def test_multi_lookup_by_name():
     assert u1 == lookup(request, name="another")
 
 def test_register_utility_from_settigs():
-    from pyramid_tiny_utility.components import ValidativeUtility
-    class VU(ValidativeUtility):
+    from pyramid_tiny_utility.components import ValidativeObject
+    class VU(ValidativeObject):
         def __init__(self, depends=None):
             self.depends = depends
 
         def validate(self):
             assert self.depends
-        from_settings = ValidativeUtility.create_from_settings_from_paramters(["depends"])
+        from_settings = ValidativeObject.create_from_settings_from_paramters(["depends"])
 
     settings = {"depends": True}
-    _config.register_tiny_utility_from_settings(VU, settings)
+    _config.add_instance_from_settings(VU, settings)
 
     settings = {"depends": False}
     with pytest.raises(AssertionError):
-        _config.register_tiny_utility_from_settings(VU, settings)
+        _config.add_instance_from_settings(VU, settings)
 
 ## mapping
 def test_mapping():
@@ -92,7 +92,7 @@ def test_mapping():
     class Source(object):
         pass
 
-    _config.register_mapping(Source, Container)
+    _config.add_mapping(Source, Container)
     
     class request:
         registry = _config.registry
@@ -116,8 +116,8 @@ def test_mapping_another():
     class CAdapter(Adapter):
         pass
 
-    _config.register_mapping(A, Adapter, BAdapter)
-    _config.register_mapping(A, Adapter, CAdapter, name="c-case")
+    _config.add_mapping(A, Adapter, BAdapter)
+    _config.add_mapping(A, Adapter, CAdapter, name="c-case")
     
     class request:
         registry = _config.registry

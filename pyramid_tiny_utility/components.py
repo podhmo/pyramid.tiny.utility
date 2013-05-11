@@ -17,14 +17,14 @@ def _create_dynamic_interface(name=None, cache=None):
 create_dynamic_interface = partial(_create_dynamic_interface, cache=_cache)
 
 ## utility
-class TinyUtilityMeta(type):
+class ConfiguredObjectMeta(type):
     def __new__(cls, name, base, attrs):
         check_reserved_word(attrs, "_interface")
         attrs["_interface"] = provided = create_dynamic_interface("I"+name)
         return type(name, base, attrs)
 
-class TinyUtility(object):
-    __metaclass__ = TinyUtilityMeta
+class ConfiguredObject(object):
+    __metaclass__ = ConfiguredObjectMeta
 
     @classmethod
     def from_settings(cls, settings):
@@ -38,7 +38,7 @@ class TinyUtility(object):
             return cls(**params)
         return from_settings
 
-class ValidativeUtility(TinyUtility):
+class ValidativeObject(ConfiguredObject):
     def validate(self):
         raise NotImplementedError
 

@@ -1,13 +1,13 @@
 ```
 ### Utility
 from pyramid import testing
-from pyramid_tiny_utility import TinyUtility, create_lookup
+from pyramid_tiny_utility import ConfiguredObject, create_configured_instance_lookup
 
-class Uploader(TinyUtility):
+class Uploader(ConfiguredObject):
     def __init__(self, storepath):
         self.storepath = storepath
 
-get_uploder = create_lookup(Uploader)
+get_uploder = create_configured_instance_lookup(Uploader)
     
 settings = {
     "demo.uploader.storepath": "/tmp/storepath"
@@ -15,7 +15,7 @@ settings = {
 
 config = testing.setUp()
 config.include("pyramid_tiny_utility")
-config.register_tiny_utility(Uploader(settings["demo.uploader.storepath"]))
+config.add_instance(Uploader(settings["demo.uploader.storepath"]))
 
 ## request
 class request:
@@ -28,10 +28,10 @@ testing.tearDown()
 
 ```
 ### Valiadative Utility
-from pyramid_tiny_utility import ValidativeUtility
+from pyramid_tiny_utility import ValidativeObject
 from pyramid.exceptions import ConfigurationError
 
-class MailManagement(ValidativeUtility):
+class MailManagement(ValidativeObject):
     def __init__(self, sender=None, default_title=None):
         self.sender = sender
         self.default_title = default_title
@@ -43,7 +43,7 @@ class MailManagement(ValidativeUtility):
 settings = {"mail.sender": "invalid-name",
             "mail.default_title": "default"}
 
-get_mailmanagemt = create_lookup(MailManagement)
+get_mailmanagemt = create_configured_instance_lookup(MailManagement)
 
 
 ## configuration
@@ -51,13 +51,13 @@ get_mailmanagemt = create_lookup(MailManagement)
 config = testing.setUp()
 config.include("pyramid_tiny_utility")
 try:
-    config.register_tiny_utility(MailManagement(settings["mail.sender"],
+    config.add_instance(MailManagement(settings["mail.sender"],
                                                 settings["mail.default_title"]))
 except ConfigurationError:
     print "error found"
 
 settings["mail.sender"] = "foo@bar.jp"
-config.register_tiny_utility(MailManagement(settings["mail.sender"],
+config.add_instance(MailManagement(settings["mail.sender"],
                                             settings["mail.default_title"]))
 
 ## request
@@ -112,9 +112,9 @@ class ListRender(object):
 
 config = testing.setUp()
 config.include("pyramid_tiny_utility")
-config.register_mapping(Model, Render, RowRender)
-config.register_mapping(Model, Render, RowRender, name="row")
-config.register_mapping(Model, Render, ListRender, name="list")
+config.add_mapping(Model, Render, RowRender)
+config.add_mapping(Model, Render, RowRender, name="row")
+config.add_mapping(Model, Render, ListRender, name="list")
 
 
 ## request

@@ -2,8 +2,8 @@ from pyramid.exceptions import ConfigurationError
 from .components import (
     get_interface,
     create_dynamic_interface,
-    TinyUtility,
-    ValidativeUtility
+    ConfiguredObject,
+    ValidativeObject
 )
 
 def maybe_iter(o):
@@ -17,7 +17,7 @@ def as_interfaces(src):
 
 ## directive
 
-def register_tiny_utility(config, provided, name=""):
+def add_instance(config, provided, name=""):
     interface = get_interface(provided)
     if interface is None:
         raise ConfigurationError("{0} is not have _interface".format(provided)
@@ -28,11 +28,11 @@ def register_tiny_utility(config, provided, name=""):
         config.registry.registerUtility(provided, interface, name=name)
     config.action("tinyUtility", register)
 
-def register_tiny_utility_from_settings(config, cls, settings, name=""):
+def add_instance_from_settings(config, cls, settings, name=""):
     provided = cls.from_settings(settings)
-    register_tiny_utility(config, provided, name=name)
+    add_instance(config, provided, name=name)
 
-def register_mapping(config, src, dst, value=None, name=""):
+def add_mapping(config, src, dst, value=None, name=""):
     isrc = as_interfaces(src)
     idst = create_dynamic_interface(dst.__name__)
     value = value or dst
@@ -42,7 +42,7 @@ def register_mapping(config, src, dst, value=None, name=""):
 
 ## create
 
-def create_lookup(tiny_utility_cls, name=None):
+def create_configured_instance_lookup(tiny_utility_cls, name=None):
     interface = get_interface(tiny_utility_cls)
     def _lookup(request,name=""):
         return request.registry.queryUtility(interface,name=name)
@@ -61,6 +61,6 @@ def get_mapping(request, src, dst, name=""):
     return get_mapping_from_class(request, src.__class__, dst, name=name)
 
 def includeme(config):
-    config.add_directive("register_tiny_utility", register_tiny_utility)
-    config.add_directive("register_tiny_utility_from_settings", register_tiny_utility_from_settings)
-    config.add_directive("register_mapping", register_mapping)
+    config.add_directive("add_instance", add_instance)
+    config.add_directive("add_instance_from_settings", add_instance_from_settings)
+    config.add_directive("add_mapping", add_mapping)
